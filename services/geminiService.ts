@@ -6,8 +6,20 @@ import { GoogleGenAI, Type } from "@google/genai";
  */
 
 export const parseSyllabus = async (text: string, userApiKey?: string) => {
-  // Prioritize the user's stored key, fallback to environment variable
-  const apiKey = userApiKey || process.env.API_KEY;
+  // 1. Safe access to process.env (Producer Key)
+  // We wrap this in a try-catch because accessing 'process' in some browser environments 
+  // without a polyfill can throw a ReferenceError, causing a crash.
+  let producerKey = "";
+  try {
+    // If process is defined (e.g. via Vite define or Webpack), use it.
+    producerKey = process.env.API_KEY || "";
+  } catch (e) {
+    // If process is not defined, we ignore the error and default to empty string.
+    console.debug("Pathways: process.env is not accessible. relying on user key.");
+  }
+
+  // 2. Logic: If user provides a key, use it. Otherwise, use the Producer key.
+  const apiKey = userApiKey || producerKey;
 
   if (!apiKey) {
     throw new Error("No API Key available. Please configure your Gemini API Key in Settings.");

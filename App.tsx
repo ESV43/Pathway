@@ -27,7 +27,8 @@ import {
   Target,
   Trophy,
   Lightbulb,
-  ArrowUpRight
+  ArrowUpRight,
+  Key
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip
@@ -165,7 +166,6 @@ const MobileNav: React.FC<{ user: UserProfile; onSettings: () => void }> = ({ us
           to={link.to} 
           className={({ isActive }) => `flex flex-col items-center gap-1.5 transition-all flex-1 ${isActive ? 'text-indigo-400 scale-105' : 'text-slate-400'}`}
         >
-          {/* Use render function for children to correctly access isActive in nested elements */}
           {({ isActive }) => (
             <>
               <div className={`p-2 rounded-xl transition-all ${isActive ? 'bg-indigo-600/20' : ''}`}>
@@ -415,7 +415,8 @@ const Curriculum: React.FC<{ data: AppState; onUpdate: (d: AppState) => void }> 
   const handleAI = async () => {
     setIsParsing(true);
     try {
-      const res = await parseSyllabus(syllabus);
+      // Pass the user's stored API key to the service
+      const res = await parseSyllabus(syllabus, data.user.apiKey);
       const c: Course = {
         id: generateId(), title: res.courseTitle, description: 'AI Generated',
         modules: res.modules.map((m: any) => ({
@@ -424,6 +425,8 @@ const Curriculum: React.FC<{ data: AppState; onUpdate: (d: AppState) => void }> 
         }))
       };
       onUpdate({ ...data, courses: [...data.courses, c] }); setAiModal(false); setSyllabus('');
+    } catch (error) {
+      alert("AI Processing Failed: Please check your Internet connection and ensure a valid Gemini API Key is set in your Profile Settings.");
     } finally { setIsParsing(false); }
   };
 
@@ -503,6 +506,9 @@ const Curriculum: React.FC<{ data: AppState; onUpdate: (d: AppState) => void }> 
 
       <Modal isOpen={aiModal} onClose={() => setAiModal(false)} title="Intelligence Parser">
          <textarea className="w-full h-48 bg-black/40 border border-white/10 rounded-2xl p-4 text-xs md:text-sm font-mono mb-4 resize-none text-slate-200 placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Paste your syllabus text content here for AI structure generation..." value={syllabus} onChange={e => setSyllabus(e.target.value)} />
+         <div className="flex flex-col gap-2 mb-4">
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">AI Features Required</p>
+         </div>
          <button onClick={handleAI} disabled={isParsing} className="w-full bg-indigo-600 py-4.5 rounded-2xl font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xl">
             {isParsing ? <RefreshCw className="animate-spin" size={18}/> : <Sparkles size={18}/>}
             {isParsing ? 'Analyzing Syllabus...' : 'Import structure'}
@@ -685,8 +691,26 @@ const App: React.FC = () => {
               <Label>Academic Identity</Label>
               <Input value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} placeholder="Display Name" />
               <Input value={profileForm.role} onChange={e => setProfileForm({...profileForm, role: e.target.value})} placeholder="Academic Status" />
-              <button onClick={() => { setData({...data, user: profileForm}); setShowSettings(false); }} className="w-full bg-indigo-600 py-4.5 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"><Save size={18}/> Update Scholar</button>
             </section>
+
+            <section className="space-y-4 border-t border-white/5 pt-4">
+              <Label>AI Configuration</Label>
+              <div className="relative">
+                <Input 
+                  type="password" 
+                  value={profileForm.apiKey || ''} 
+                  onChange={e => setProfileForm({...profileForm, apiKey: e.target.value})} 
+                  placeholder="Paste Gemini API Key here..." 
+                  className="pl-10"
+                />
+                <Key size={16} className="absolute left-3.5 top-3.5 text-slate-500" />
+              </div>
+              <p className="text-[10px] text-slate-500 leading-relaxed px-1">
+                Your API key is stored securely in your browser's local storage and is only used to communicate with Google's Gemini service for syllabus parsing.
+              </p>
+            </section>
+
+            <button onClick={() => { setData({...data, user: profileForm}); setShowSettings(false); }} className="w-full bg-indigo-600 py-4.5 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"><Save size={18}/> Update Scholar</button>
             
             <section className="space-y-4 border-t border-white/5 pt-8">
               <Label>Knowledge Core</Label>
@@ -701,7 +725,7 @@ const App: React.FC = () => {
               </div>
               <button onClick={() => { if(confirm("This will permanently clear all your study data. Proceed?")) { localStorage.removeItem(STORAGE_KEY); window.location.reload(); } }} className="w-full py-4 border border-red-500/20 text-red-500 rounded-2xl text-[10px] font-bold uppercase tracking-widest mt-6 hover:bg-red-500/10 transition-all shadow-sm">Reset Local Session</button>
             </section>
-            <p className="text-[9px] text-slate-600 text-center uppercase tracking-[0.25em] font-bold pt-4 opacity-50">Pathways Academic Build 2.5</p>
+            <p className="text-[9px] text-slate-600 text-center uppercase tracking-[0.25em] font-bold pt-4 opacity-50">Pathways Academic Build 2.6</p>
           </div>
         </Modal>
       </div>

@@ -5,9 +5,15 @@ import { GoogleGenAI, Type } from "@google/genai";
  * PATHWAYS ACADEMIC SERVICE
  */
 
-export const parseSyllabus = async (text: string) => {
-  // Use process.env.API_KEY directly as per requirements
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+export const parseSyllabus = async (text: string, userApiKey?: string) => {
+  // Prioritize the user's stored key, fallback to environment variable
+  const apiKey = userApiKey || process.env.API_KEY;
+
+  if (!apiKey) {
+    throw new Error("No API Key available. Please configure your Gemini API Key in Settings.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",

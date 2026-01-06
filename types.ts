@@ -61,6 +61,7 @@ export interface UserProfile {
   name: string;
   role: string;
   avatarUrl?: string;
+  apiKey?: string;
 }
 
 export interface AppState {

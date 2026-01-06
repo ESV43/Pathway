@@ -28,8 +28,7 @@ import {
   Target,
   Trophy,
   Lightbulb,
-  ArrowUpRight,
-  User
+  ArrowUpRight
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip
@@ -44,8 +43,8 @@ import {
   Topic, 
   Module,
   UserProfile
-} from './types';
-import { parseSyllabus } from './services/geminiService';
+} from './types.ts';
+import { parseSyllabus } from './services/geminiService.ts';
 
 const STORAGE_KEY = 'pathways_academic_v2_final';
 
@@ -159,16 +158,16 @@ const MobileNav: React.FC<{ user: UserProfile; onSettings: () => void }> = ({ us
     { to: '/calendar', icon: <CalendarIcon size={20} />, label: 'Timeline' },
   ];
   return (
-    <nav className="md:hidden fixed bottom-4 left-4 right-4 z-[60] bg-[#1e1b4b]/90 backdrop-blur-2xl border border-white/10 px-4 py-3 rounded-[2rem] flex justify-between items-center shadow-2xl shadow-black/50">
+    <nav className="md:hidden fixed bottom-4 left-4 right-4 z-[60] bg-[#1e1b4b]/95 backdrop-blur-2xl border border-white/10 px-4 py-3 rounded-[2rem] flex justify-between items-center shadow-2xl shadow-black/50">
       {links.map((link) => (
         <NavLink key={link.to} to={link.to} className={({ isActive }) => `flex flex-col items-center gap-1 transition-all flex-1 ${isActive ? 'text-indigo-400 scale-105' : 'text-slate-500'}`}>
           {link.icon}
-          <span className="text-[9px] font-bold uppercase tracking-widest">{link.label}</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{link.label}</span>
         </NavLink>
       ))}
       <button onClick={onSettings} className="flex flex-col items-center gap-1 flex-1 transition-all text-slate-500">
         <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-lg mb-0.5">{user.name.charAt(0)}</div>
-        <span className="text-[9px] font-bold uppercase tracking-widest">Me</span>
+        <span className="text-[9px] font-bold uppercase tracking-widest leading-none">Profile</span>
       </button>
     </nav>
   );
@@ -281,7 +280,6 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Insights & Tips */}
         <GlassCard className="bg-gradient-to-br from-indigo-600/20 to-purple-600/10 border-indigo-500/20 order-1 lg:order-1">
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="text-yellow-400 shrink-0" size={18} />
@@ -306,7 +304,6 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
           </div>
         </GlassCard>
 
-        {/* Priority Radar */}
         <GlassCard className="lg:col-span-2 order-2 lg:order-2">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">

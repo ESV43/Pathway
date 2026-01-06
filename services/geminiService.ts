@@ -1,9 +1,9 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-
 export const parseSyllabus = async (text: string) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `Parse the following syllabus text into a structured JSON format with modules and topics. Focus on the core curriculum structure.\n\nSyllabus Text: ${text}`,

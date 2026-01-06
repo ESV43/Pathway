@@ -1,8 +1,13 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
+/**
+ * PATHWAYS ACADEMIC SERVICE
+ */
+
 export const parseSyllabus = async (text: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Use process.env.API_KEY directly as per requirements
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -39,5 +44,6 @@ export const parseSyllabus = async (text: string) => {
     }
   });
 
+  // Extract the generated text output directly using the .text property
   return JSON.parse(response.text || '{}');
 };

@@ -17,7 +17,6 @@ import {
   X,
   Edit2,
   Save,
-  Link as LinkIcon,
   Check,
   Download,
   Upload,
@@ -53,15 +52,16 @@ const StorageService = {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   },
   load: (): AppState => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return {
-      user: { name: 'Scholar', role: 'Student' },
-      courses: [],
-      academicProjects: []
-    };
     try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return {
+        user: { name: 'Scholar', role: 'Student' },
+        courses: [],
+        academicProjects: []
+      };
       return JSON.parse(saved);
     } catch (e) {
+      console.error("Storage error:", e);
       return { user: { name: 'Scholar', role: 'Student' }, courses: [], academicProjects: [] };
     }
   }
@@ -92,7 +92,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; chi
       <GlassCard className="w-full max-w-lg relative z-10 shadow-2xl border-white/20 overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center mb-4 px-1">
           <h3 className="text-lg font-bold flex items-center gap-2">{title}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400"><X size={20}/></button>
+          <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-full transition-colors text-slate-400"><X size={20}/></button>
         </div>
         <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-4">
           {children}
@@ -105,7 +105,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; chi
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
   <input 
     {...props} 
-    className={`w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white placeholder:text-slate-600 ${props.className || ''}`}
+    className={`w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white placeholder:text-slate-600 ${props.className || ''}`}
   />
 );
 
@@ -158,15 +158,26 @@ const MobileNav: React.FC<{ user: UserProfile; onSettings: () => void }> = ({ us
     { to: '/calendar', icon: <CalendarIcon size={20} />, label: 'Timeline' },
   ];
   return (
-    <nav className="md:hidden fixed bottom-4 left-4 right-4 z-[60] bg-[#1e1b4b]/95 backdrop-blur-2xl border border-white/10 px-4 py-3 rounded-[2rem] flex justify-between items-center shadow-2xl shadow-black/50">
+    <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[60] bg-[#1e1b4b]/95 backdrop-blur-3xl border border-white/10 px-2 py-4 rounded-[2.5rem] flex justify-around items-center shadow-2xl shadow-black/60">
       {links.map((link) => (
-        <NavLink key={link.to} to={link.to} className={({ isActive }) => `flex flex-col items-center gap-1 transition-all flex-1 ${isActive ? 'text-indigo-400 scale-105' : 'text-slate-500'}`}>
-          {link.icon}
-          <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{link.label}</span>
+        <NavLink 
+          key={link.to} 
+          to={link.to} 
+          className={({ isActive }) => `flex flex-col items-center gap-1.5 transition-all flex-1 ${isActive ? 'text-indigo-400 scale-105' : 'text-slate-400'}`}
+        >
+          {/* Use render function for children to correctly access isActive in nested elements */}
+          {({ isActive }) => (
+            <>
+              <div className={`p-2 rounded-xl transition-all ${isActive ? 'bg-indigo-600/20' : ''}`}>
+                {link.icon}
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{link.label}</span>
+            </>
+          )}
         </NavLink>
       ))}
-      <button onClick={onSettings} className="flex flex-col items-center gap-1 flex-1 transition-all text-slate-500">
-        <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-lg mb-0.5">{user.name.charAt(0)}</div>
+      <button onClick={onSettings} className="flex flex-col items-center gap-1.5 flex-1 transition-all text-slate-400">
+        <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-lg border-2 border-white/10">{user.name.charAt(0)}</div>
         <span className="text-[9px] font-bold uppercase tracking-widest leading-none">Profile</span>
       </button>
     </nav>
@@ -190,29 +201,29 @@ const TopicDetailsModal: React.FC<{
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Unit Explorer">
-      <div className="space-y-6 pb-6">
+      <div className="space-y-6 pb-12 md:pb-6">
         <h4 className="text-xl font-bold text-white mb-2">{topic.title}</h4>
         
         <section className="space-y-4">
           <Label>Tasks & Active Notes</Label>
           <div className="flex gap-2">
             <Input value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="Action item..." onKeyDown={e => e.key === 'Enter' && addTask()} />
-            <button onClick={addTask} className="p-3 bg-indigo-600 rounded-2xl shrink-0 text-white"><Plus size={20}/></button>
+            <button onClick={addTask} className="p-4 bg-indigo-600 rounded-2xl shrink-0 text-white active:scale-90 transition-transform"><Plus size={20}/></button>
           </div>
           <div className="space-y-3">
             {topic.tasks.map(t => (
               <div key={t.id} className="space-y-2">
                 <div className="flex items-center gap-3 p-4 glass-dark rounded-2xl border border-white/5">
-                  <button onClick={() => onUpdate({ ...topic, tasks: topic.tasks.map(x => x.id === t.id ? { ...x, completed: !x.completed } : x) })} className="shrink-0 p-1">
-                    {t.completed ? <CheckCircle2 size={22} className="text-emerald-500"/> : <Circle size={22} className="text-slate-600"/>}
+                  <button onClick={() => onUpdate({ ...topic, tasks: topic.tasks.map(x => x.id === t.id ? { ...x, completed: !x.completed } : x) })} className="shrink-0 p-1.5">
+                    {t.completed ? <CheckCircle2 size={24} className="text-emerald-500"/> : <Circle size={24} className="text-slate-600"/>}
                   </button>
                   <span className={`text-sm flex-1 break-words ${t.completed ? 'line-through text-slate-500' : 'text-slate-200'}`}>{t.title}</span>
                   <div className="flex gap-1 shrink-0">
-                    <button onClick={() => setActiveTaskNotes({id: t.id, notes: t.notes || ''})} className="text-slate-500 hover:text-indigo-400 p-2"><StickyNote size={18}/></button>
-                    <button onClick={() => onUpdate({ ...topic, tasks: topic.tasks.filter(x => x.id !== t.id) })} className="text-slate-500 hover:text-red-500 p-2"><Trash2 size={18}/></button>
+                    <button onClick={() => setActiveTaskNotes({id: t.id, notes: t.notes || ''})} className="text-slate-500 hover:text-indigo-400 p-3"><StickyNote size={20}/></button>
+                    <button onClick={() => onUpdate({ ...topic, tasks: topic.tasks.filter(x => x.id !== t.id) })} className="text-slate-500 hover:text-red-500 p-3"><Trash2 size={20}/></button>
                   </div>
                 </div>
-                {t.notes && !activeTaskNotes && <p className="text-[10px] text-slate-500 ml-12 italic border-l border-white/10 pl-2">Note: {t.notes}</p>}
+                {t.notes && !activeTaskNotes && <p className="text-[10px] text-slate-500 ml-12 italic border-l border-white/10 pl-3">Note: {t.notes}</p>}
               </div>
             ))}
           </div>
@@ -227,8 +238,8 @@ const TopicDetailsModal: React.FC<{
               onChange={e => setActiveTaskNotes({...activeTaskNotes, notes: e.target.value})}
             />
             <div className="flex gap-2">
-              <button onClick={() => { onUpdate({ ...topic, tasks: topic.tasks.map(t => t.id === activeTaskNotes.id ? { ...t, notes: activeTaskNotes.notes } : t) }); setActiveTaskNotes(null); }} className="flex-1 bg-indigo-600 py-3 rounded-xl text-xs font-bold text-white active:scale-95 transition-transform">Save</button>
-              <button onClick={() => setActiveTaskNotes(null)} className="flex-1 bg-white/5 py-3 rounded-xl text-xs font-bold text-slate-400">Cancel</button>
+              <button onClick={() => { onUpdate({ ...topic, tasks: topic.tasks.map(t => t.id === activeTaskNotes.id ? { ...t, notes: activeTaskNotes.notes } : t) }); setActiveTaskNotes(null); }} className="flex-1 bg-indigo-600 py-3.5 rounded-xl text-xs font-bold text-white active:scale-95 transition-transform">Save</button>
+              <button onClick={() => setActiveTaskNotes(null)} className="flex-1 bg-white/5 py-3.5 rounded-xl text-xs font-bold text-slate-400">Cancel</button>
             </div>
           </div>
         )}
@@ -272,7 +283,7 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
           <p className="text-sm md:text-base text-slate-400 mt-0.5 font-medium">Ready for your academic sprint, {data.user.name.split(' ')[0]}?</p>
         </div>
         <div className="flex gap-2">
-           <div className="glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl flex items-center gap-2 border border-white/5">
+           <div className="glass-dark px-3 py-2 md:px-4 md:py-2 rounded-2xl flex items-center gap-2 border border-white/5">
               <Zap size={14} className="text-yellow-400 animate-pulse" />
               <span className="text-[10px] md:text-xs font-bold text-slate-300 uppercase tracking-widest">{stats.mastered} Mastered</span>
            </div>
@@ -280,7 +291,7 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <GlassCard className="bg-gradient-to-br from-indigo-600/20 to-purple-600/10 border-indigo-500/20 order-1 lg:order-1">
+        <GlassCard className="bg-gradient-to-br from-indigo-600/20 to-purple-600/10 border-indigo-500/20 order-1">
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="text-yellow-400 shrink-0" size={18} />
             <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-300">Daily Tip</h3>
@@ -291,10 +302,10 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
               <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Mastery Progress</p>
               <p className="text-2xl font-black text-indigo-400">{stats.pct}%</p>
             </div>
-            <div className="w-14 h-14">
+            <div className="w-16 h-16">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={[{v: stats.mastered}, {v: Math.max(0.1, stats.total - stats.mastered)}]} cx="50%" cy="50%" innerRadius={18} outerRadius={26} paddingAngle={2} dataKey="v">
+                  <Pie data={[{v: stats.mastered}, {v: Math.max(0.1, stats.total - stats.mastered)}]} cx="50%" cy="50%" innerRadius={20} outerRadius={28} paddingAngle={2} dataKey="v">
                     <Cell fill="#6366f1" />
                     <Cell fill="rgba(255,255,255,0.05)" />
                   </Pie>
@@ -304,23 +315,23 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
           </div>
         </GlassCard>
 
-        <GlassCard className="lg:col-span-2 order-2 lg:order-2">
+        <GlassCard className="lg:col-span-2 order-2">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Target className="text-red-400 shrink-0" size={18} />
               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Next Priority</h3>
             </div>
-            <NavLink to="/pipeline" className="text-[10px] font-bold uppercase text-indigo-400 flex items-center gap-1 hover:underline">Pipeline <ArrowUpRight size={12}/></NavLink>
+            <NavLink to="/pipeline" className="text-[10px] font-bold uppercase text-indigo-400 flex items-center gap-1 hover:underline p-1">Pipeline <ArrowUpRight size={12}/></NavLink>
           </div>
           <div className="space-y-3">
             {topPriority.map(p => (
-              <div key={p.id} className="group p-4 glass-dark rounded-2xl flex justify-between items-center border border-white/5 hover:border-indigo-500/30 transition-all active:scale-[0.98]">
+              <div key={p.id} className="group p-5 glass-dark rounded-2xl flex justify-between items-center border border-white/5 hover:border-indigo-500/30 transition-all active:scale-[0.98]">
                 <div className="min-w-0 pr-3">
                   <p className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors truncate">{p.title}</p>
-                  <p className="text-[9px] text-slate-500 mt-0.5 uppercase font-bold tracking-tighter truncate">{p.category} • {p.status}</p>
+                  <p className="text-[9px] text-slate-500 mt-1 uppercase font-bold tracking-tighter truncate">{p.category} • {p.status}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-[10px] font-black text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5 whitespace-nowrap">
+                  <p className="text-[10px] font-black text-slate-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 whitespace-nowrap">
                     {new Date(p.deadline).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
                   </p>
                 </div>
@@ -334,15 +345,15 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassCard className="order-4 lg:order-3">
           <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-6">Pipeline Breakdown</h3>
-          <div className="h-44 w-full">
+          <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={pipelineChart}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 9, fontWeight: 'bold'}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 'bold'}} />
                 <Tooltip 
                   cursor={{fill: 'rgba(255,255,255,0.05)'}}
                   contentStyle={{backgroundColor:'#1e1b4b', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', fontSize:'11px', color: '#fff'}} 
                 />
-                <Bar dataKey="value" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -351,24 +362,24 @@ const Dashboard: React.FC<{ data: AppState }> = ({ data }) => {
         <GlassCard className="order-3 lg:order-4">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">Academic Hub</h3>
-            <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-lg font-bold border border-emerald-500/20 uppercase tracking-tighter">Live Session</span>
+            <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-lg font-bold border border-emerald-500/20 uppercase tracking-tighter">Syncing...</span>
           </div>
           <div className="grid grid-cols-2 gap-3 md:gap-4">
-            <div className="p-3 md:p-4 glass-dark rounded-2xl border-l-2 md:border-l-4 border-indigo-500">
+            <div className="p-4 glass-dark rounded-2xl border-l-4 border-indigo-500">
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Units</p>
-              <p className="text-2xl md:text-3xl font-black text-white mt-0.5">{data.courses.reduce((acc, c) => acc + c.modules.length, 0)}</p>
+              <p className="text-2xl md:text-3xl font-black text-white mt-1">{data.courses.reduce((acc, c) => acc + c.modules.length, 0)}</p>
             </div>
-            <div className="p-3 md:p-4 glass-dark rounded-2xl border-l-2 md:border-l-4 border-emerald-500">
+            <div className="p-4 glass-dark rounded-2xl border-l-4 border-emerald-500">
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mastered</p>
-              <p className="text-2xl md:text-3xl font-black text-emerald-400 mt-0.5">{stats.mastered}</p>
+              <p className="text-2xl md:text-3xl font-black text-emerald-400 mt-1">{stats.mastered}</p>
             </div>
-            <div className="p-3 md:p-4 glass-dark rounded-2xl border-l-2 md:border-l-4 border-purple-500">
+            <div className="p-4 glass-dark rounded-2xl border-l-4 border-purple-500">
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Studying</p>
-              <p className="text-2xl md:text-3xl font-black text-purple-400 mt-0.5">{stats.inProgress}</p>
+              <p className="text-2xl md:text-3xl font-black text-purple-400 mt-1">{stats.inProgress}</p>
             </div>
-            <div className="p-3 md:p-4 glass-dark rounded-2xl border-l-2 md:border-l-4 border-orange-500">
+            <div className="p-4 glass-dark rounded-2xl border-l-4 border-orange-500">
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tasks</p>
-              <p className="text-2xl md:text-3xl font-black text-orange-400 mt-0.5">{data.academicProjects.length}</p>
+              <p className="text-2xl md:text-3xl font-black text-orange-400 mt-1">{data.academicProjects.length}</p>
             </div>
           </div>
         </GlassCard>
@@ -418,43 +429,43 @@ const Curriculum: React.FC<{ data: AppState; onUpdate: (d: AppState) => void }> 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center gap-2">
+      <div className="flex justify-between items-center gap-2 px-1">
         <h2 className="text-2xl md:text-3xl font-extrabold truncate">Curriculum</h2>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => setAiModal(true)} className="glass-dark p-2.5 rounded-2xl text-indigo-400 hover:bg-white/10 active:scale-95 transition-all"><Sparkles size={20}/></button>
-          <button onClick={() => setAddModal({ type: 'course' })} className="bg-indigo-600 px-4 md:px-5 py-3 rounded-2xl text-[10px] md:text-xs font-bold text-white shadow-lg active:scale-95 transition-all uppercase tracking-widest">+ Course</button>
+          <button onClick={() => setAiModal(true)} className="glass-dark p-3 rounded-2xl text-indigo-400 hover:bg-white/10 active:scale-90 transition-all"><Sparkles size={20}/></button>
+          <button onClick={() => setAddModal({ type: 'course' })} className="bg-indigo-600 px-4 md:px-5 py-3.5 rounded-2xl text-[10px] md:text-xs font-bold text-white shadow-lg active:scale-95 transition-all uppercase tracking-widest">+ Course</button>
         </div>
       </div>
 
-      <div className="space-y-4 pb-4">
+      <div className="space-y-4 pb-12">
         {data.courses.map(c => (
           <GlassCard key={c.id} className="p-0 overflow-hidden border border-white/5">
-            <div className="p-4 md:p-6 flex items-center justify-between group">
+            <div className="p-5 md:p-6 flex items-center justify-between group">
               <button onClick={() => setExpanded(expanded === c.id ? null : c.id)} className="flex items-center gap-3 md:gap-4 flex-1 text-left min-w-0">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0"><BookOpen size={20}/></div>
+                <div className="w-11 h-11 md:w-12 md:h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0 border border-indigo-600/10"><BookOpen size={22}/></div>
                 <div className="min-w-0 pr-2">
                    <h4 className="font-bold text-white text-base md:text-lg truncate">{c.title}</h4>
                    <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">{c.modules.length} Modules</p>
                 </div>
               </button>
               <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                 <button onClick={() => setAddModal({type: 'module', p1: c.id})} className="p-2 text-indigo-400 hover:bg-white/5 rounded-xl"><Plus size={18}/></button>
-                 <button onClick={() => onUpdate({...data, courses: data.courses.filter(x => x.id !== c.id)})} className="p-2 text-red-500 hover:bg-white/5 rounded-xl"><Trash2 size={18}/></button>
+                 <button onClick={() => setAddModal({type: 'module', p1: c.id})} className="p-3 text-indigo-400 hover:bg-white/5 rounded-xl"><Plus size={20}/></button>
+                 <button onClick={() => onUpdate({...data, courses: data.courses.filter(x => x.id !== c.id)})} className="p-3 text-red-500 hover:bg-white/5 rounded-xl"><Trash2 size={20}/></button>
               </div>
               {expanded === c.id ? <ChevronDown size={20} className="ml-2 text-slate-500" /> : <ChevronRight size={20} className="ml-2 text-slate-500" />}
             </div>
             {expanded === c.id && (
-              <div className="px-4 md:px-6 pb-6 space-y-4 animate-in slide-in-from-top-2">
+              <div className="px-5 md:px-6 pb-6 space-y-4 animate-in slide-in-from-top-2">
                  {c.modules.map(m => (
-                   <div key={m.id} className="glass-dark rounded-3xl border border-white/5 overflow-hidden">
-                      <div className="bg-white/10 px-4 py-3 flex items-center justify-between">
+                   <div key={m.id} className="glass-dark rounded-3xl border border-white/5 overflow-hidden shadow-inner">
+                      <div className="bg-white/10 px-4 py-3.5 flex items-center justify-between">
                          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 truncate pr-4">{m.title}</span>
-                         <button onClick={() => setAddModal({type: 'topic', p1: c.id, p2: m.id})} className="p-1 hover:text-white transition-colors shrink-0"><Plus size={16}/></button>
+                         <button onClick={() => setAddModal({type: 'topic', p1: c.id, p2: m.id})} className="p-2 hover:text-white transition-colors shrink-0"><Plus size={18}/></button>
                       </div>
                       <div className="divide-y divide-white/5">
                         {m.topics.map(t => (
-                          <div key={t.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
-                            <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1 pr-2">
+                          <div key={t.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                            <div className="flex items-center gap-4 min-w-0 flex-1 pr-2">
                               <button 
                                 onClick={() => {
                                   const newData = {...data};
@@ -463,44 +474,38 @@ const Curriculum: React.FC<{ data: AppState; onUpdate: (d: AppState) => void }> 
                                   if (tRef) tRef.status = flow[(flow.indexOf(tRef.status) + 1) % flow.length];
                                   onUpdate(newData);
                                 }}
-                                className="shrink-0 active:scale-90 transition-transform p-0.5"
+                                className="shrink-0 active:scale-75 transition-transform p-1"
                               >
-                                {t.status === 'Mastered' ? <CheckCircle2 size={24} className="text-emerald-500"/> : t.status === 'In Progress' ? <Clock size={24} className="text-indigo-400"/> : <Circle size={24} className="text-slate-700"/>}
+                                {t.status === 'Mastered' ? <CheckCircle2 size={28} className="text-emerald-500"/> : t.status === 'In Progress' ? <Clock size={28} className="text-indigo-400"/> : <Circle size={28} className="text-slate-700"/>}
                               </button>
                               <div className="min-w-0">
                                 <p className="text-sm font-bold text-slate-200 truncate">{t.title}</p>
-                                <p className="text-[8px] text-slate-500 uppercase tracking-tighter font-bold">{t.status}</p>
+                                <p className="text-[9px] text-slate-500 uppercase tracking-tighter font-bold">{t.status}</p>
                               </div>
                             </div>
-                            <button onClick={() => setActiveTopic({cId: c.id, mId: m.id, topic: t})} className="p-2 text-slate-500 hover:text-white transition-colors shrink-0"><Edit2 size={16}/></button>
+                            <button onClick={() => setActiveTopic({cId: c.id, mId: m.id, topic: t})} className="p-3 text-slate-500 hover:text-white transition-colors shrink-0"><Edit2 size={18}/></button>
                           </div>
                         ))}
                       </div>
                    </div>
                  ))}
-                 {c.modules.length === 0 && <p className="text-center py-6 text-xs text-slate-600 italic">No modules defined yet.</p>}
+                 {c.modules.length === 0 && <p className="text-center py-8 text-xs text-slate-600 italic">No modules defined yet.</p>}
               </div>
             )}
           </GlassCard>
         ))}
-        {data.courses.length === 0 && (
-          <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-3xl text-slate-600 opacity-50">
-             <BookOpen size={40} className="mb-2"/>
-             <p className="text-xs uppercase font-bold tracking-[0.2em]">Curriculum is empty</p>
-          </div>
-        )}
       </div>
 
       <Modal isOpen={!!addModal} onClose={() => setAddModal(null)} title={`Add ${addModal?.type}`}>
-         <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Entry Title..." autoFocus onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-         <button onClick={handleAdd} className="w-full mt-4 bg-indigo-600 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-[0.98] transition-all">Confirm Entry</button>
+         <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Title Name..." autoFocus onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+         <button onClick={handleAdd} className="w-full mt-4 bg-indigo-600 py-4.5 rounded-2xl font-bold text-white shadow-lg active:scale-[0.98] transition-all">Confirm Entry</button>
       </Modal>
 
-      <Modal isOpen={aiModal} onClose={() => setAiModal(false)} title="Syllabus AI Parser">
-         <textarea className="w-full h-44 bg-black/40 border border-white/10 rounded-2xl p-4 text-xs md:text-sm font-mono mb-4 resize-none text-slate-200 placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Paste syllabus text content here..." value={syllabus} onChange={e => setSyllabus(e.target.value)} />
-         <button onClick={handleAI} disabled={isParsing} className="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+      <Modal isOpen={aiModal} onClose={() => setAiModal(false)} title="Intelligence Parser">
+         <textarea className="w-full h-48 bg-black/40 border border-white/10 rounded-2xl p-4 text-xs md:text-sm font-mono mb-4 resize-none text-slate-200 placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Paste your syllabus text content here for AI structure generation..." value={syllabus} onChange={e => setSyllabus(e.target.value)} />
+         <button onClick={handleAI} disabled={isParsing} className="w-full bg-indigo-600 py-4.5 rounded-2xl font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xl">
             {isParsing ? <RefreshCw className="animate-spin" size={18}/> : <Sparkles size={18}/>}
-            {isParsing ? 'Analyzing Syllabus...' : 'Import to Curriculum'}
+            {isParsing ? 'Analyzing Syllabus...' : 'Import structure'}
          </button>
       </Modal>
 
@@ -531,7 +536,7 @@ const AcademicPipeline: React.FC<{ data: AppState; onUpdate: (d: AppState) => vo
   const columns = [
     { title: 'Upcoming', status: AcademicTaskStatus.UPCOMING },
     { title: 'Working', status: AcademicTaskStatus.IN_PROGRESS },
-    { title: 'Final Review', status: AcademicTaskStatus.REVIEW },
+    { title: 'Review', status: AcademicTaskStatus.REVIEW },
     { title: 'Done', status: AcademicTaskStatus.SUBMITTED },
   ];
 
@@ -549,34 +554,34 @@ const AcademicPipeline: React.FC<{ data: AppState; onUpdate: (d: AppState) => vo
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center gap-2">
+      <div className="flex justify-between items-center gap-2 px-1">
         <h2 className="text-2xl md:text-3xl font-extrabold truncate">Pipeline</h2>
-        <button onClick={() => setModal({isOpen: true})} className="bg-emerald-600 px-4 md:px-5 py-3 rounded-2xl text-[10px] md:text-xs font-bold text-white shadow-lg shrink-0 flex items-center gap-2 active:scale-95 transition-all uppercase tracking-widest">+ Project</button>
+        <button onClick={() => setModal({isOpen: true})} className="bg-emerald-600 px-4 md:px-5 py-3.5 rounded-2xl text-[10px] md:text-xs font-bold text-white shadow-lg shrink-0 flex items-center gap-2 active:scale-95 transition-all uppercase tracking-widest">+ Project</button>
       </div>
 
-      <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 min-h-[60vh] overflow-x-auto pb-10 no-scrollbar snap-x snap-mandatory px-1">
+      <div className="flex md:grid md:grid-cols-4 gap-5 md:gap-6 min-h-[60vh] overflow-x-auto pb-20 no-scrollbar snap-x snap-mandatory px-1">
         {columns.map(col => (
-          <div key={col.status} className="space-y-4 min-w-[280px] md:min-w-0 snap-center">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-2 border-b border-white/5 pb-2">{col.title}</h4>
+          <div key={col.status} className="space-y-4 min-w-[290px] md:min-w-0 snap-center">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-2 border-b border-white/5 pb-2.5">{col.title}</h4>
             <div className="space-y-3">
               {data.academicProjects.filter(p => p.status === col.status).map(item => (
-                <GlassCard key={item.id} className="p-5 border border-white/5 hover:border-indigo-500/30 group transition-all active:scale-[0.98]">
+                <GlassCard key={item.id} className="p-6 border border-white/5 hover:border-indigo-500/30 group transition-all active:scale-[0.98]">
                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-[9px] text-indigo-400 font-bold uppercase truncate pr-4 tracking-tighter">{item.category || 'General'}</p>
-                      <button onClick={() => setModal({isOpen: true, editItem: item})} className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-500 hover:text-white transition-all"><Edit2 size={14}/></button>
+                      <p className="text-[10px] text-indigo-400 font-bold uppercase truncate pr-4 tracking-tighter">{item.category || 'Academic'}</p>
+                      <button onClick={() => setModal({isOpen: true, editItem: item})} className="md:opacity-0 md:group-hover:opacity-100 p-2.5 text-slate-500 hover:text-white transition-all"><Edit2 size={16}/></button>
                    </div>
-                   <h5 className="text-sm font-bold text-slate-200 mb-4 line-clamp-2">{item.title}</h5>
-                   <div className="flex flex-col gap-3">
+                   <h5 className="text-sm font-bold text-slate-200 mb-5 line-clamp-2 leading-snug">{item.title}</h5>
+                   <div className="flex flex-col gap-3.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-slate-500 font-bold flex items-center gap-1"><CalendarIcon size={12}/> {new Date(item.deadline).toLocaleDateString()}</span>
-                        <span className="text-[8px] text-indigo-400/80 uppercase font-black tracking-widest">{item.status.split(' ')[0]}</span>
+                        <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1.5"><CalendarIcon size={14}/> {new Date(item.deadline).toLocaleDateString()}</span>
+                        <span className="text-[9px] text-indigo-400/80 uppercase font-black tracking-widest">{item.status.split(' ')[0]}</span>
                       </div>
-                      <div className="flex gap-2 mt-1">
+                      <div className="flex gap-2.5 mt-1">
                         {columns.map(c => (
                           <button 
                             key={c.status} 
                             onClick={() => onUpdate({...data, academicProjects: data.academicProjects.map(p => p.id === item.id ? {...p, status: c.status as AcademicTaskStatus} : p)})} 
-                            className={`h-1.5 rounded-full transition-all ${item.status === c.status ? 'bg-indigo-500 w-6 shadow-sm' : 'bg-white/10 w-2 hover:bg-white/20'}`} 
+                            className={`h-2 rounded-full transition-all ${item.status === c.status ? 'bg-indigo-500 w-8 shadow-sm' : 'bg-white/10 w-2.5 hover:bg-white/20'}`} 
                             title={c.title}
                           />
                         ))}
@@ -584,25 +589,25 @@ const AcademicPipeline: React.FC<{ data: AppState; onUpdate: (d: AppState) => vo
                    </div>
                 </GlassCard>
               ))}
-              {data.academicProjects.filter(p => p.status === col.status).length === 0 && <div className="border border-dashed border-white/5 rounded-3xl p-10 flex flex-col items-center justify-center opacity-20 italic text-[9px] uppercase font-bold text-slate-600 text-center">Empty Column</div>}
+              {data.academicProjects.filter(p => p.status === col.status).length === 0 && <div className="border border-dashed border-white/5 rounded-3xl p-12 flex flex-col items-center justify-center opacity-20 italic text-[9px] uppercase font-bold text-slate-600 text-center">Empty Stage</div>}
             </div>
           </div>
         ))}
       </div>
 
-      <Modal isOpen={modal.isOpen} onClose={() => setModal({isOpen: false})} title={modal.editItem ? "Update Milestones" : "New Task Record"}>
-         <div className="space-y-5 pb-2">
-            <div><Label>Task Title</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g. Mid-term Research" /></div>
-            <div className="grid grid-cols-2 gap-3">
-               <div><Label>Tag</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="Lab, Thesis..." /></div>
+      <Modal isOpen={modal.isOpen} onClose={() => setModal({isOpen: false})} title={modal.editItem ? "Update Record" : "New Assignment"}>
+         <div className="space-y-5 pb-6">
+            <div><Label>Task Title</Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g. Master's Thesis Phase 1" /></div>
+            <div className="grid grid-cols-2 gap-4">
+               <div><Label>Tag</Label><Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="Exam, Review..." /></div>
                <div><Label>Deadline</Label><Input type="date" value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} /></div>
             </div>
-            <div><Label>Context / Details</Label>
-               <textarea className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white h-24 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Specific objectives or notes..." />
+            <div><Label>Record Details</Label>
+               <textarea className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white h-28 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Contextual notes or specific requirements..." />
             </div>
-            <button onClick={handleSave} className="w-full bg-emerald-600 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-[0.98] transition-all">Submit Details</button>
+            <button onClick={handleSave} className="w-full bg-emerald-600 py-4.5 rounded-2xl font-bold text-white shadow-lg active:scale-[0.98] transition-all uppercase tracking-widest text-xs">Save Milestone</button>
             {modal.editItem && (
-               <button onClick={() => { if(confirm("Discard this project permanently?")) { onUpdate({...data, academicProjects: data.academicProjects.filter(p => p.id !== modal.editItem?.id)}); setModal({isOpen: false}); }}} className="w-full py-3 border border-red-500/20 text-red-500 rounded-2xl text-[9px] font-bold uppercase tracking-widest hover:bg-red-500/10 transition-all">Delete Record</button>
+               <button onClick={() => { if(confirm("Discard this record forever?")) { onUpdate({...data, academicProjects: data.academicProjects.filter(p => p.id !== modal.editItem?.id)}); setModal({isOpen: false}); }}} className="w-full py-3.5 border border-red-500/20 text-red-500 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-500/10 transition-all">Delete Entry</button>
             )}
          </div>
       </Modal>
@@ -614,23 +619,23 @@ const CalendarView: React.FC<{ data: AppState }> = ({ data }) => {
   const sorted = useMemo(() => [...data.academicProjects].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()), [data.academicProjects]);
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-2 duration-500">
-      <h2 className="text-2xl md:text-3xl font-extrabold px-1">Timeline</h2>
+    <div className="space-y-8 animate-in slide-in-from-bottom-2 duration-500 px-1">
+      <h2 className="text-2xl md:text-3xl font-extrabold">Chronology</h2>
       <GlassCard className="p-6 md:p-8">
-         <div className="space-y-6">
+         <div className="space-y-8 pb-12">
             {sorted.map((p, idx) => (
-              <div key={p.id} className="relative pl-10 md:pl-12">
-                 {idx !== sorted.length - 1 && <div className="absolute left-[13px] md:left-[15px] top-8 bottom-0 w-[2px] bg-indigo-500/10" />}
-                 <div className={`absolute left-0 top-1 w-7 h-7 md:w-8 md:h-8 rounded-2xl border-2 flex items-center justify-center shadow-lg shrink-0 ${p.status === AcademicTaskStatus.SUBMITTED ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-indigo-950 border-indigo-500 text-indigo-400'}`}>
-                    {p.status === AcademicTaskStatus.SUBMITTED ? <Check size={14}/> : <span className="text-[10px] font-black">{idx+1}</span>}
+              <div key={p.id} className="relative pl-12 md:pl-14">
+                 {idx !== sorted.length - 1 && <div className="absolute left-[15px] md:left-[17px] top-10 bottom-0 w-[2.5px] bg-indigo-500/15" />}
+                 <div className={`absolute left-0 top-1.5 w-8 h-8 md:w-9 md:h-9 rounded-2xl border-2 flex items-center justify-center shadow-lg shrink-0 transition-all ${p.status === AcademicTaskStatus.SUBMITTED ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-indigo-950 border-indigo-500 text-indigo-400'}`}>
+                    {p.status === AcademicTaskStatus.SUBMITTED ? <Check size={16}/> : <span className="text-[11px] font-black">{idx+1}</span>}
                  </div>
-                 <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 p-4 md:p-5 glass-dark rounded-[1.5rem] md:rounded-3xl border border-white/5 group hover:border-indigo-500/30 transition-all active:scale-[0.99]">
-                    <div className="min-w-0 pr-2">
-                      <h5 className="font-bold text-white text-sm md:text-base group-hover:text-indigo-300 transition-colors truncate">{p.title}</h5>
-                      <span className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">{p.category}</span>
+                 <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 p-5 md:p-6 glass-dark rounded-[2rem] border border-white/5 group hover:border-indigo-500/30 transition-all active:scale-[0.99] shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <h5 className="font-bold text-white text-base group-hover:text-indigo-300 transition-colors truncate mb-0.5">{p.title}</h5>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{p.category}</span>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                       <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-indigo-500/10">
+                    <div className="flex items-center gap-3 shrink-0">
+                       <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-4 py-2.5 rounded-xl border border-indigo-500/20 shadow-inner">
                          {new Date(p.deadline).toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'})}
                        </span>
                     </div>
@@ -638,9 +643,9 @@ const CalendarView: React.FC<{ data: AppState }> = ({ data }) => {
               </div>
             ))}
             {sorted.length === 0 && (
-              <div className="text-center py-20 text-slate-600 flex flex-col items-center opacity-30">
-                <CalendarIcon size={48} className="mb-2"/>
-                <p className="text-[10px] uppercase tracking-[0.3em] font-black">Timeline Inactive</p>
+              <div className="text-center py-24 text-slate-600 flex flex-col items-center opacity-30">
+                <CalendarIcon size={56} className="mb-4"/>
+                <p className="text-xs uppercase tracking-[0.4em] font-black">History Clean</p>
               </div>
             )}
          </div>
@@ -654,14 +659,16 @@ const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [profileForm, setProfileForm] = useState(data.user);
 
-  useEffect(() => { StorageService.save(data); }, [data]);
+  useEffect(() => { 
+    StorageService.save(data); 
+  }, [data]);
 
   return (
     <MemoryRouter>
       <div className="flex min-h-screen bg-[#020617] text-slate-200 selection:bg-indigo-500/30 font-sans">
         <Sidebar user={data.user} onSettings={() => setShowSettings(true)} />
         <MobileNav user={data.user} onSettings={() => setShowSettings(true)} />
-        <main className="flex-1 md:ml-72 p-4 md:p-12 min-h-screen pb-28 md:pb-12 transition-all duration-500 overflow-x-hidden">
+        <main className="flex-1 md:ml-72 p-5 md:p-12 min-h-screen pb-32 md:pb-12 transition-all duration-500 overflow-x-hidden">
           <div className="max-w-5xl mx-auto">
             <Routes>
               <Route path="/" element={<Dashboard data={data} />} />
@@ -672,29 +679,29 @@ const App: React.FC = () => {
           </div>
         </main>
         
-        <Modal isOpen={showSettings} onClose={() => setShowSettings(false)} title="Student Profile">
-          <div className="space-y-6 pb-2">
+        <Modal isOpen={showSettings} onClose={() => setShowSettings(false)} title="Scholar Profile">
+          <div className="space-y-6 pb-4">
             <section className="space-y-4">
               <Label>Academic Identity</Label>
               <Input value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} placeholder="Display Name" />
-              <Input value={profileForm.role} onChange={e => setProfileForm({...profileForm, role: e.target.value})} placeholder="Field of Study" />
-              <button onClick={() => { setData({...data, user: profileForm}); setShowSettings(false); }} className="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"><Save size={18}/> Update Identity</button>
+              <Input value={profileForm.role} onChange={e => setProfileForm({...profileForm, role: e.target.value})} placeholder="Academic Status" />
+              <button onClick={() => { setData({...data, user: profileForm}); setShowSettings(false); }} className="w-full bg-indigo-600 py-4.5 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"><Save size={18}/> Update Scholar</button>
             </section>
             
             <section className="space-y-4 border-t border-white/5 pt-8">
-              <Label>Governance</Label>
+              <Label>Knowledge Core</Label>
               <div className="grid grid-cols-2 gap-3">
-                 <button onClick={() => { const blob = new Blob([JSON.stringify(data)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='pathways_academic.json'; a.click(); }} className="glass-dark p-4 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition-all text-white border border-white/5 active:scale-95">
-                    <Download size={22} className="text-indigo-400" /><span className="text-[9px] font-bold uppercase tracking-widest">Backup</span>
+                 <button onClick={() => { try { const blob = new Blob([JSON.stringify(data)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='pathways_data.json'; a.click(); } catch(e){alert("Export failed")} }} className="glass-dark p-5 rounded-3xl flex flex-col items-center gap-3 hover:bg-white/10 transition-all text-white border border-white/5 active:scale-95">
+                    <Download size={24} className="text-indigo-400" /><span className="text-[10px] font-bold uppercase tracking-widest">Backup</span>
                  </button>
-                 <label className="glass-dark p-4 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition-all cursor-pointer text-white border border-white/5 active:scale-95">
-                    <Upload size={22} className="text-emerald-400" /><span className="text-[9px] font-bold uppercase tracking-widest">Restore</span>
-                    <input type="file" className="hidden" accept=".json" onChange={e => { const f = e.target.files?.[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ try{setData(JSON.parse(ev.target?.result as string))}catch(err){alert("Invalid data file")}}; r.readAsText(f); }}} />
+                 <label className="glass-dark p-5 rounded-3xl flex flex-col items-center gap-3 hover:bg-white/10 transition-all cursor-pointer text-white border border-white/5 active:scale-95">
+                    <Upload size={24} className="text-emerald-400" /><span className="text-[10px] font-bold uppercase tracking-widest">Restore</span>
+                    <input type="file" className="hidden" accept=".json" onChange={e => { const f = e.target.files?.[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ try{ const parsed = JSON.parse(ev.target?.result as string); setData(parsed); }catch(err){alert("Invalid data source")}}; r.readAsText(f); }}} />
                  </label>
               </div>
-              <button onClick={() => { if(confirm("Erase all local records? This action is permanent.")) { localStorage.removeItem(STORAGE_KEY); window.location.reload(); } }} className="w-full py-3 border border-red-500/20 text-red-500 rounded-2xl text-[9px] font-bold uppercase tracking-widest mt-4 hover:bg-red-500/10 transition-all">Clear Local Session</button>
+              <button onClick={() => { if(confirm("This will permanently clear all your study data. Proceed?")) { localStorage.removeItem(STORAGE_KEY); window.location.reload(); } }} className="w-full py-4 border border-red-500/20 text-red-500 rounded-2xl text-[10px] font-bold uppercase tracking-widest mt-6 hover:bg-red-500/10 transition-all shadow-sm">Reset Local Session</button>
             </section>
-            <p className="text-[8px] text-slate-600 text-center uppercase tracking-[0.2em] font-bold pt-2">Pathways Academic v2.1</p>
+            <p className="text-[9px] text-slate-600 text-center uppercase tracking-[0.25em] font-bold pt-4 opacity-50">Pathways Academic Build 2.5</p>
           </div>
         </Modal>
       </div>

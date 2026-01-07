@@ -5,31 +5,15 @@ import { GoogleGenAI, Type } from "@google/genai";
  * PATHWAYS ACADEMIC SERVICE
  */
 
-export const parseSyllabus = async (text: string, userApiKey?: string) => {
-  // 1. Safe access to process.env (Producer Key)
-  // We wrap this in a try-catch because accessing 'process' in some browser environments 
-  // without a polyfill can throw a ReferenceError, causing a crash.
-  let producerKey = "";
-  try {
-    // If process is defined (e.g. via Vite define or Webpack), use it.
-    producerKey = process.env.API_KEY || "";
-  } catch (e) {
-    // If process is not defined, we ignore the error and default to empty string.
-    console.debug("Pathways: process.env is not accessible. relying on user key.");
-  }
+const getAIClient = (apiKey?: string) => {
+  return new GoogleGenAI({ apiKey: apiKey || process.env.API_KEY });
+};
 
-  // 2. Logic: If user provides a key, use it. Otherwise, use the Producer key.
-  const apiKey = userApiKey || producerKey;
-
-  if (!apiKey) {
-    throw new Error("No API Key available. Please configure your Gemini API Key in Settings.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-  
+export const parseSyllabus = async (text: string, apiKey?: string) => {
+  const ai = getAIClient(apiKey);
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: `Parse the following syllabus text into a structured JSON format with modules and topics. Focus on the core curriculum structure.\n\nSyllabus Text: ${text}`,
+    contents: `Parse the following syllabus text into a structured JSON format with modules and topics. Syllabus Text: ${text}`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -46,9 +30,7 @@ export const parseSyllabus = async (text: string, userApiKey?: string) => {
                   type: Type.ARRAY,
                   items: {
                     type: Type.OBJECT,
-                    properties: {
-                      title: { type: Type.STRING }
-                    },
+                    properties: { title: { type: Type.STRING } },
                     required: ["title"]
                   }
                 }
@@ -61,7 +43,77 @@ export const parseSyllabus = async (text: string, userApiKey?: string) => {
       }
     }
   });
+  return JSON.parse(response.text || '{}');
+};
 
-  // Extract the generated text output directly using the .text property
+export const generateTopicAssistance = async (topicTitle: string, courseTitle: string, apiKey?: string) => {
+  const ai = getAIClient(apiKey);
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Topic: ${topicTitle}. Course: ${courseTitle}. Provide a 2-sentence simple explanation and 3 specific actionable study tasks.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          explanation: { type: Type.STRING },
+          suggestedTasks: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        },
+        required: ["explanation", "suggestedTasks"]
+      }
+    }
+  });
+  return JSON.parse(response.text || '{}');
+};
+
+export const generateCourseRoadmap = async (courseTitle: string, topics: string[], apiKey?: string) => {
+  const ai = getAIClient(apiKey);
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Course: ${courseTitle}. Topics: ${topics.join(', ')}. Create a logical 4-week study roadmap in JSON format.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          weeks: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                week: { type: Type.STRING },
+                focus: { type: Type.STRING },
+                tasks: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["week", "focus", "tasks"]
+            }
+          }
+        },
+        required: ["weeks"]
+      }
+    }
+  });
+  return JSON.parse(response.text || '{}');
+};
+
+export const generatePipelineTasks = async (projectTitle: string, category: string, apiKey?: string) => {
+  const ai = getAIClient(apiKey);
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Project: ${projectTitle}. Category: ${category}. Suggest 5 professional sub-tasks for a student roadmap.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          tasks: { type: Type.ARRAY, items: { type: Type.STRING } }
+        },
+        required: ["tasks"]
+      }
+    }
+  });
   return JSON.parse(response.text || '{}');
 };

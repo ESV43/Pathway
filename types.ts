@@ -18,6 +18,7 @@ export interface Task {
   completed: boolean;
   priority: 'Low' | 'Medium' | 'High';
   notes?: string;
+  deadline?: string;
 }
 
 export interface Resource {
